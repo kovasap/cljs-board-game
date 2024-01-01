@@ -1,5 +1,6 @@
 (ns app.interface.lands)
 
+; In order of cycle shifting.
 (def lands
   [{:letter     "F"
     :type       :forest
@@ -9,6 +10,10 @@
     :type       :plains
     :perlin-cutoff 0.3
     :style      {:background-color "orange"}}
+   {:letter     "S"
+    :type       :sand
+    :perlin-cutoff 0.2
+    :style      {:background-color "yellow"}}
    {:letter     "W"
     :type       :water
     :perlin-cutoff 0.0
@@ -17,11 +22,7 @@
     :type       :mountain
     :perlin-cutoff 0.75
     :style      {:background-color "grey"}}
-   {:letter     "S"
-    :type       :sand
-    :perlin-cutoff 0.2
-    :style      {:background-color "yellow"}}
-   {:letter     "V"
-    :type       :void
-    :perlin-cutoff 10.0
-    :style      {:background-color "black"}}])
+   #_{:letter     "V"
+      :type       :void
+      :perlin-cutoff 10.0
+      :style      {:background-color "black"}}])

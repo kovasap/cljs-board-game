@@ -1,8 +1,17 @@
-# Terraforming Catan!
+# Shifting World
 
 ## Game Flow
 
-Players take turns placing developments.
+Every round, players place developments in order until they cannot place any
+more and pass.
+
+Then, the world shifts; the waning land type transforms into the next land type
+in the cycle.
+Optionally, a waxing land type transforms into the previous land type.
+
+All developments on these shifted land tiles are destroyed and their resources
+are lost.
+
 The player with the highest score at the end wins!
 
 ## Feelings to Inspire in Players
@@ -11,6 +20,8 @@ The player with the highest score at the end wins!
    to evaluate the best strategy for that specific board state.
  - Games should not be too long - players should not feel like they have to keep
    playing a game for a while that they have already lost.
+ - I want to avoid the mid/late game civ problem of too many things going on.
+   This game should feel like the early game of civ only.
 
 ## Stuff to Add
 

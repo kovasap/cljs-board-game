@@ -57,6 +57,11 @@
   (fn [db _]
     (:blueprints db)))
 
+(rf/reg-sub
+  :orders
+  (fn [db _]
+    (:orders db)))
+
 (rf/reg-event-db
   :message
   (fn [db [_ message]]

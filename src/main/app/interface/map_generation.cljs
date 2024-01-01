@@ -42,8 +42,9 @@
           ; player
           :controller       nil
           :legal-placement-or-error "Nothing to do here"
+          ; current unused because developments cannot currently be "used"
           ; nil if there is no worker
-          :worker-owner     nil
+          ; :worker-owner     nil
           :land             nil}
          args))
 

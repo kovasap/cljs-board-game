@@ -59,6 +59,9 @@
                                         :style {:margin-left "auto"}}
        [:b "End Turn "] "and Send to Server"]]
      [:br]
+     [:div 
+      [:p "Orders: " (:orders db)]
+      [:p "Points given to first achiever"]]
      [:div {:style {:display  "grid"
                     :grid-template-columns "auto auto"
                     :grid-gap "15px"}}
