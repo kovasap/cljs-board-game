@@ -99,19 +99,27 @@
      S   SS2 S   S   S   FS3 F   W
      S   S   S   S   S   F   F   W"))
 
-
-(defn generate-perlin-board
-  "Returns 2d array of tile maps."
-  [width height]
+(defn generate-board
+  "Returns 2d array of tile maps with the given width/height.
+  
+  land-fn takes in a row-idx and a col-idx, and returns a land type
+  that should go at that tile location.
+  "
+  [width height land-fn]
   (into []
         (for [row-idx (range height)]
           (into []
                 (for [col-idx (range width)]
                   (base-tile {:row-idx row-idx
                               :col-idx col-idx
-                              :land    (get-perlin-land row-idx col-idx)}))))))
+                              :land    (land-fn row-idx col-idx)}))))))
+
+(defn get-random-land
+  [row-idx col-idx]
+  (first (take 1 (shuffle lands))))
 
 (defn setup-board
   [db]
-  (assoc db :board manual-board))
-  ; (assoc db :board (generate-perlin-board 15 10))))
+  ; (assoc db :board manual-board)
+  (assoc db :board (generate-board 8 7 get-random-land)))
+  ; (assoc db :board (generate-board 15 10 get-perlin-land))))
