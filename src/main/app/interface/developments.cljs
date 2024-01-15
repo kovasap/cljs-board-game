@@ -1,5 +1,7 @@
 (ns app.interface.developments
   (:require [app.interface.lands :refer [lands]]
+            [re-frame.core :as rf]
+            [day8.re-frame.undo :as undo :refer [undoable]] 
             [clojure.set :refer [difference]]))
 
 (defn assoc-if-nil
@@ -139,3 +141,33 @@
         (assoc-if-nil :valid-lands generally-valid-lands)
         (assoc-if-nil :on-placement identity)
         (assoc-if-nil :land-accumulation {}))))
+
+
+(rf/reg-event-db
+  :development/use
+  (undoable "Development Use")
+  (fn [db [_ development {:keys [row-idx col-idx worker-owner] :as tile}]]
+    (assoc db :message "Not Yet Implemented")
+    #_(let [current-player-name (:player-name @(rf/subscribe [:current-player]))
+            tax (if (= current-player-name (:owner development))
+                  {}
+                  (:tax development))
+            [cost-payable updated-db] (update-resources-with-check
+                                        db (:current-player-idx db) tax)
+            use-fn (if (:use development) (:use development) identity)]
+        (cond
+          worker-owner (assoc db
+                         :message (str "Worker from "
+                                       worker-owner
+                                       " already here!"))
+          cost-payable (-> updated-db
+                           (update-in [:players
+                                       (:current-player-idx db)
+                                       :workers]
+                                      dec)
+                           (assoc-in [:board row-idx col-idx :worker-owner]
+                                     current-player-name)
+                           (use-fn development tile))
+          :else        updated-db))))
+
+

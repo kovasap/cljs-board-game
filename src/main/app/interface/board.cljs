@@ -48,3 +48,30 @@
 (defn update-adjacent-tiles
   [board tile update-fn]
   (update-tiles board (fn [t] (if (adjacent? t tile) (update-fn t) t))))
+
+
+(defn control-any-tiles?
+  "Returns true if the given player-idx controls any tiles in the given board."
+  [board player-idx]
+  (> (count
+      (reduce concat
+        (for [column board]
+          (for [{:keys [controller-idx]} column
+                :when (= controller-idx player-idx)]
+            controller-idx))))
+     0))
+
+(defn get-num-developments
+  [board development-type]
+  (count
+    (filter #(= % development-type)
+      (reduce concat
+        (for [column board]
+          (for [tile column] (:development-type tile)))))))
+
+(rf/reg-sub
+  :num-developments
+  (fn [db [_ development-type]]
+    (get-num-developments (:board db) development-type)))
+
+

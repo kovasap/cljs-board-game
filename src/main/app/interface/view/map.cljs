@@ -16,16 +16,17 @@
            row-idx
            col-idx
            development-type
-           legal-placement-or-error
+           is-valid-selection
            production
            controller-idx]
     :as   tile}]
-  (let [adjacent-tiles   @(rf/subscribe [:adjacent-tiles tile])
-        hovered          (get-in @tile-hover-state [row-idx col-idx])
-        legal-placement? (not (string? legal-placement-or-error))
-        controller       (get-only @(rf/subscribe [:players])
-                                   :idx
-                                   controller-idx)]
+  (let [adjacent-tiles @(rf/subscribe [:adjacent-tiles tile])
+        currently-selecting @(rf/subscribe
+                               [:tile-selection/currently-selecting])
+        hovered        (get-in @tile-hover-state [row-idx col-idx])
+        controller     (get-only @(rf/subscribe [:players])
+                                 :idx
+                                 controller-idx)]
     [:div.tile
      {:style         {:font-size  "12px"
                       :text-align "center"
@@ -34,33 +35,33 @@
       :class         (if development-type "activate" "")
       :on-mouse-over #(doseq [{t-row-idx :row-idx t-col-idx :col-idx}
                               (conj adjacent-tiles tile)]
-                        (swap! tile-hover-state (fn [state]
-                                                  (assoc-in state
-                                                    [t-row-idx t-col-idx]
-                                                    true))))
+                        (swap! tile-hover-state
+                          (fn [state]
+                            (assoc-in state [t-row-idx t-col-idx] true))))
       :on-mouse-out  #(doseq [{t-row-idx :row-idx t-col-idx :col-idx}
                               (conj adjacent-tiles tile)]
-                        (swap! tile-hover-state (fn [state]
-                                                  (assoc-in state
-                                                    [t-row-idx t-col-idx]
-                                                    false))))
-      :on-click      #(cond @(rf/subscribe [:placing]) (rf/dispatch
-                                                         [:development/place
-                                                          tile])
-                            development-type (rf/dispatch [:development/use
-                                                           development-type
-                                                           tile])
-                            :else (rf/dispatch [:message
-                                                "Can't do anything here"]))}
+                        (swap! tile-hover-state
+                          (fn [state]
+                            (assoc-in state [t-row-idx t-col-idx] false))))
+      :on-click      #(cond currently-selecting (rf/dispatch
+                                                  [:tile-selection/end tile])
+                            development-type    (rf/dispatch [:development/use
+                                                              development-type
+                                                              tile])
+                            :else               (rf/dispatch
+                                                  [:message
+                                                   "Can't do anything here"]))}
      [:div.background
       {:style (merge (:style land)
                      {:width    "100%"
                       :height   "100%"
                       :position "absolute"
                       :z-index  -1
-                      :opacity  (cond (and legal-placement? hovered) 1.0
-                                      legal-placement? 0.8
-                                      :else 0.7)})}]
+                      :opacity  (if currently-selecting
+                                  (cond (and is-valid-selection hovered) 1.0
+                                        is-valid-selection 0.8
+                                        :else 0.4)
+                                  0.8)})}]
      ; Note that the "clip-path" property that makes the hexagon shapes applies
      ; to all child divs, making it impossible for them to overflow their
      ; parent.
@@ -73,9 +74,11 @@
       [:div {:style {:color (:color controller)}}
        (if controller (str (:player-name controller) "'s") nil)]
       [:div development-type]
-      [:div (st/join ", " (for [[k v] production
-                                :when (> v 0)]
-                           (str v " " (name k))))]]]))
+      [:div
+       (st/join ", "
+                (for [[k v] production
+                      :when (> v 0)]
+                  (str v " " (name k))))]]]))
 
 
 ; Defined as --s and --m in resources/public/css/board.css.  These values must

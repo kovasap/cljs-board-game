@@ -4,6 +4,10 @@
             [clojure.string :as st]
             [app.interface.utils :refer [get-only]]
             [app.interface.developments :refer [developments resources]]
+            [app.interface.development-placement
+             :refer
+             [make-development-placement-validator
+              make-development-placement-callback]]
             ["cytoscape" :as cytoscape]))
 
 
@@ -38,32 +42,40 @@
 (def unique-id (atom 1))
 (defn development-blueprint-view
   [development]
-  (let [dev-name            (name (:type development))
-        existing-num        @(rf/subscribe [:num-developments
-                                            (:type development)])
-        current-player-name (:player-name @(rf/subscribe [:current-player]))
-        placing             @(rf/subscribe [:placing])
-        placing-current     (= placing (:type development))]
+  (let [dev-name (name (:type development))
+        existing-num @(rf/subscribe [:num-developments (:type development)])
+        current-player @(rf/subscribe [:current-player])
+        board @(rf/subscribe [:board])
+        placing-this-development
+        (= (:development-type @(rf/subscribe [:tile-selection/selection-data]))
+           (:type development))]
     (swap! unique-id inc)
-    [:div {:key      (str dev-name @unique-id) ; Required by react (otherwise
-                                               ; we get a warning).
-           :style    {:background  (if (:not-implemented development)
-                                     "LightGrey"
-                                     "LightBlue")
-                      :text-align  "left"
-                      :width       "250px"
-                      :height      "300px"
-                      :flex        1
-                      :padding     "15px"
-                      :font-weight (if placing-current "bold" "normal")
-                      :border      "2px solid black"}
-           :on-click (if (:not-implemented development)
-                        #(prn "not implemented")
-                        #(if placing-current
-                                (rf/dispatch [:development/stop-placing])
-                                (rf/dispatch [:development/start-placing
-                                              (:type development)
-                                              current-player-name])))}
+    [:div
+     {:key      (str dev-name @unique-id) ; Required by react (otherwise
+                                          ; we get a warning).
+      :style    {:background  (if (:not-implemented development)
+                                "LightGrey"
+                                "LightBlue")
+                 :text-align  "left"
+                 :width       "250px"
+                 :height      "300px"
+                 :flex        1
+                 :padding     "15px"
+                 :font-weight (if placing-this-development "bold" "normal")
+                 :border      "2px solid black"}
+      :on-click (if (:not-implemented development)
+                  #(prn "not implemented")
+                  #(if placing-this-development
+                     (rf/dispatch [:tile-selection/end nil])
+                     (rf/dispatch [:tile-selection/start
+                                   (make-development-placement-validator
+                                     development
+                                     board
+                                     (:idx current-player))
+                                   (make-development-placement-callback
+                                     development
+                                     (:idx current-player))
+                                   {:development-type (:type development)}])))}
      [:div [:strong dev-name] " " existing-num "/" (:max development)]
      [:div
       [:small
@@ -79,10 +91,10 @@
        nil)
      (if (:land-production development)
        [:div
-         "Harvests: "
-         (for [[land production] (:land-production development)]
-           [:div {:key (str land @unique-id)}
-            (str land " : " production)])]
+        "Harvests: "
+        (for [[land production] (:land-production development)]
+          [:div {:key (str land @unique-id)}
+           (str land " : " production)])]
        nil)]))
 
 

@@ -18,15 +18,15 @@
             [app.interface.config :refer [debug]]
             [app.interface.resources :refer [resources]]
             [app.interface.scoring]
+            [app.interface.tile-selection]
             [app.interface.orders :refer [orders]]
             [app.interface.utils :refer [get-only]]
             [cljs.pprint]
             [taoensso.timbre :as log]))
 
 (rf/reg-sub
-  :db-no-board
-  (fn [db _]
-    (dissoc db :board)))
+  :db
+  (fn [db _] db))
 
 
 ;; ----------------------------------------------------------------------------
@@ -52,25 +52,15 @@
          :blueprints (select-developments)
          :placing false))))
 
-(rf/reg-sub
-  :blueprints
-  (fn [db _]
-    (:blueprints db)))
-
-(rf/reg-sub
-  :orders
-  (fn [db _]
-    (:orders db)))
+(doseq [kw [:blueprints :orders :board :message]]
+  (rf/reg-sub
+    kw
+    (fn [db _] (kw db))))
 
 (rf/reg-event-db
   :message
   (fn [db [_ message]]
     (assoc db :message message)))
-
-(rf/reg-sub
-  :message
-  (fn [db _]
-    (:message db)))
 
 ;; ----------------------------------------------------------------------------
 ;; End of Game

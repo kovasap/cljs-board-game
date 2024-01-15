@@ -39,7 +39,7 @@
   "Main view for the application."
   []
   (let [players @(rf/subscribe [:players])
-        db      @(rf/subscribe [:db-no-board])]
+        db      @(rf/subscribe [:db])]
     [:div @chsk-state]
     [:div.container
      #_(let [csrf-token (force

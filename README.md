@@ -41,12 +41,10 @@ developments costing more days to build than others.
 
 In order of priority.
 
-1. Random map generation that works well given the developments that exist.
-   Every game should feel like a new puzzle to solve.
-   I also need to make the teraformer and make developments more strictly tile
-   specific to make this work.
 1. Maybe have clearing a development of all resources trigger something (get
    points?)
+1. Implement the teraformer.
+1. make developments more strictly tile specific.
 1. Have left over resources stick around to the next round, and have them be
    useful in that round.
    Maybe some resources become "global" like points and can be used to build new
