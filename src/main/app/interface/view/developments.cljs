@@ -3,6 +3,7 @@
             [reagent.core :as r]
             [clojure.string :as st]
             [app.interface.utils :refer [get-only]]
+            [app.interface.view.util :refer [tally-marks]]
             [app.interface.developments :refer [developments resources]]
             [app.interface.development-placement
              :refer
@@ -13,39 +14,40 @@
 
 (def dev-desc-hover-state (r/atom {}))
 (defn development-desc-view
-  [development-type row-idx col-idx]
-  (let [unique-key [row-idx col-idx]
+  [development-type {:keys [row-idx col-idx] :as tile}]
+  (let [unique-key  [row-idx col-idx]
         development (get-only developments :type development-type)]
     [:div {:style         {:width    "100%"
                            :height   "100%"
                            :position "absolute"
                            :z-index  1}
-           :on-mouse-over #(swap! dev-desc-hover-state (fn [state]
-                                                         (assoc state
-                                                           unique-key true)))
-           :on-mouse-out  #(swap! dev-desc-hover-state (fn [state]
-                                                         (assoc state
-                                                           unique-key false)))}
+           :on-mouse-over #(swap! dev-desc-hover-state
+                             (fn [state] (assoc state unique-key true)))
+           :on-mouse-out  #(swap! dev-desc-hover-state
+                             (fn [state] (assoc state unique-key false)))}
      [:div
-      {:style {:position   "absolute"
-               :background "white"
-               :overflow   "visible"
-               :text-align "left"
-               :top        50
-               :z-index    2
-               :display    (if (get @dev-desc-hover-state unique-key)
-                             "block"
-                             "none")}}
-      (:description development)]]))
+      {:style    {:position   "absolute"
+                  :background "white"
+                  :overflow   "visible"
+                  :text-align "left"
+                  :top        50
+                  :z-index    2
+                  :display    (if (get @dev-desc-hover-state unique-key)
+                                "block"
+                                "none")}
+       :on-click #(rf/dispatch [:development/destroy tile])}
+      [:p (:description development)]
+      [:p "Click to destroy."]]]))
+      
 
 
 (def unique-id (atom 1))
 (defn development-blueprint-view
   [development]
-  (let [dev-name (name (:type development))
-        existing-num @(rf/subscribe [:num-developments (:type development)])
+  (let [dev-name       (name (:type development))
+        existing-num   @(rf/subscribe [:num-developments (:type development)])
         current-player @(rf/subscribe [:current-player])
-        board @(rf/subscribe [:board])
+        board          @(rf/subscribe [:board])
         placing-this-development
         (= (:development-type @(rf/subscribe [:tile-selection/selection-data]))
            (:type development))]
@@ -76,7 +78,14 @@
                                      development
                                      (:idx current-player))
                                    {:development-type (:type development)}])))}
-     [:div [:strong dev-name] " " existing-num "/" (:max development)]
+     (into
+       [:div [:strong dev-name] " " existing-num "/" (:max development) " "]
+       (for [[ptype number] (:personnel development)]
+         [:span {:style {:color (if (neg? number) "red" "green")}}
+          (tally-marks (abs number)
+                       (case ptype
+                         :explorers  "i"
+                         :channelers "j"))]))
      [:div
       [:small
        "Place in "

@@ -52,7 +52,7 @@
          :blueprints (select-developments)
          :placing false))))
 
-(doseq [kw [:blueprints :orders :board :message]]
+(doseq [kw [:players :blueprints :orders :board :message]]
   (rf/reg-sub
     kw
     (fn [db _] (kw db))))

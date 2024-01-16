@@ -20,14 +20,11 @@
            production
            controller-idx]
     :as   tile}]
-  (let [adjacent-tiles @(rf/subscribe [:adjacent-tiles tile])
-        currently-selecting @(rf/subscribe
+  (let [currently-selecting @(rf/subscribe
                                [:tile-selection/currently-selecting])
-        selectable     (nil? selection-validator-error)
-        hovered        (get-in @tile-hover-state [row-idx col-idx])
-        controller     (get-only @(rf/subscribe [:players])
-                                 :idx
-                                 controller-idx)]
+        selectable (nil? selection-validator-error)
+        hovered    (get-in @tile-hover-state [row-idx col-idx])
+        controller (get-only @(rf/subscribe [:players]) :idx controller-idx)]
     [:div.tile
      {:style         {:font-size  "12px"
                       :text-align "center"
@@ -35,14 +32,16 @@
       ; Run the placement animation.
       :class         (if development-type "activate" "")
       :on-mouse-over #(swap! tile-hover-state
-                         (fn [state] (assoc-in state [row-idx col-idx] true)))
+                        (fn [state] (assoc-in state [row-idx col-idx] true)))
       :on-mouse-out  #(swap! tile-hover-state
-                         (fn [state] (assoc-in state [row-idx col-idx] false)))
-      :on-click      #(cond 
-                        currently-selecting
-                        (if selectable
-                          (rf/dispatch [:tile-selection/end tile])
-                          (rf/dispatch [:message selection-validator-error]))
+                        (fn [state] (assoc-in state [row-idx col-idx] false)))
+      :on-click      #(cond
+                        currently-selecting (if selectable
+                                              (rf/dispatch [:tile-selection/end
+                                                            tile])
+                                              (rf/dispatch
+                                                [:message
+                                                 selection-validator-error]))
                         development-type    (rf/dispatch [:development/use
                                                           development-type
                                                           tile])
@@ -63,15 +62,13 @@
      ; Note that the "clip-path" property that makes the hexagon shapes applies
      ; to all child divs, making it impossible for them to overflow their
      ; parent.
-     (development-desc-view development-type row-idx col-idx)
+     (if development-type
+       (development-desc-view development-type tile))
      [:div {:style {:position "absolute" :padding-top "10px" :width "100%"}}
       [:div {:style {:display (if debug "block" "none")}}
        row-idx
        ", "
        col-idx]
-      [:div {:style {:display (if development-type "block" "none")}
-             :on-click #(rf/dispatch [:development/destroy tile])}
-       "DESTROY"]
       [:div {:style {:color (:color controller)}}
        (if controller (str (:player-name controller) "'s") nil)]
       [:div development-type]

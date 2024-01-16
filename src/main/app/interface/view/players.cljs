@@ -1,15 +1,12 @@
 (ns app.interface.view.players
   (:require [re-frame.core :as rf]
-            [clojure.string :as st]))
+            [app.interface.view.util :refer [tally-marks]]))
 
-(defn tally-marks
-  [number character]
-  [:pre {:style {:display "inline"}}
-   (st/join (take number (repeat character)))])
 
 (defn player-card-view
-  [{:keys [player-name idx color] {:keys [explorers channelers]} :personnel}]
+  [{:keys [player-name idx color]}]
   (let [current-player-name (:player-name @(rf/subscribe [:current-player]))
+        {:keys [explorers channelers]} @(rf/subscribe [:personnel idx])
         points @(rf/subscribe [:score-for-player idx])]
     [:div
      [:div {:style {:color color}}

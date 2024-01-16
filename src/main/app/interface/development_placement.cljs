@@ -1,5 +1,8 @@
 (ns app.interface.development-placement
   (:require [app.interface.lands :refer [lands]]
+            [re-frame.core :as rf]
+            [day8.re-frame.undo :as undo :refer [undoable]]
+            [app.interface.players :refer [get-available-personnel]]
             [app.interface.board
              :refer
              [update-tiles
@@ -12,18 +15,14 @@
             [app.interface.utils :refer [get-only]]))
 
 
-(defn update-personnel
-  "Creates a new personnel map with personnel gained/lost by creating the given
-  development."
-  [development current-player-personnel]
-  (merge-with + current-player-personnel (:personnel development)))
-
 (defn insufficient-personnel?
   "Returns false if the player has enough personnel to create the development,
   true otherwise."
-  [development current-player]
+  [board development current-player-idx]
   (some neg?
-        (vals (update-personnel development (:personnel current-player)))))
+        (vals (merge-with +
+                          (get-available-personnel board current-player-idx)
+                          (:personnel development)))))
 
 
 (defn make-development-placement-validator
@@ -38,7 +37,7 @@
                   (for [chain (:production-chains development)]
                     [chain (unmet-resources chain board tile)]))]
         (cond
-          (insufficient-personnel? development current-player)
+          (insufficient-personnel? board development (:idx current-player))
           "Not enough explorers or channelers!"
           (not (nil? (:development-type tile)))
           "Tile is already occupied!"
@@ -78,16 +77,16 @@
                 (apply comp
                   (for [chain (:production-chains development)]
                     #(apply-production-chain chain % tile))))
-        ; Update player personnel counts
-        (update-in [:players current-player-idx :personnel]
-                   #(update-personnel development %))
         ; Do any special, development specific on placement actions.
         ((:on-placement development)))))
 
 (rf/reg-event-db
   :development/destroy
-  (fn [db [_ tile]]
+  (undoable "Development destruction")
+  (fn [db [_ {:keys [row-idx col-idx]}]]
     (-> db
-        TODO implement)))
+        (update-in
+          [:board row-idx col-idx]
+          #(dissoc % :development-type :production :controller-idx)))))
         
   

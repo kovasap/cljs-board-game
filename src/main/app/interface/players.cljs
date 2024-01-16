@@ -1,13 +1,17 @@
 (ns app.interface.players
-  (:require [re-frame.core :as rf]))
+  (:require [re-frame.core :as rf]
+            [app.interface.utils :refer [get-only]]
+            [app.interface.developments :refer [developments]]))
+
+(def starting-personnel
+  {:explorers 5
+   :channelers 2})
 
 (defn player-data
   [i player-name]
   {:player-name player-name
    :idx         i
    :color       (get ["blue" "red" "purple" "black"] i)
-   :personnel {:explorers   5
-               :channelers  2}
    :points      0})
 
 #_(defn update-resources
@@ -24,10 +28,20 @@
         [false (assoc db :message "Cannot pay the cost!")]
         [true updated])))
 
+(defn get-available-personnel
+  [board player-idx]
+  (reduce #(merge-with + %1 %2)
+    starting-personnel
+    (->> (flatten board)
+         (filter #(= (:controller-idx %) player-idx))
+         (map #(:personnel
+                 (get-only developments :type (:development-type %)))))))
+
 (rf/reg-sub
-  :players
-  (fn [db _]
-    (:players db)))
+  :personnel
+  (fn [{:keys [board]} [_ player-idx]]
+    (get-available-personnel board player-idx)))
+    
 
 (defn get-current-player
   [{:keys [players current-player-idx] :as db}]

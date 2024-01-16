@@ -21,6 +21,16 @@
         :style {:margin-right "auto"}}
        "Undo"])))
 
+(defn redo-button
+  []
+  ; only enable the button when there's redos
+  (let [redos? (rf/subscribe [:redos?])]
+    (fn []
+      [:button.btn.btn-outline-primary
+       {:disabled (not @redos?)
+        :on-click #(rf/dispatch [:redo])
+        :style {:margin-right "auto"}}
+       "Redo"])))
 
 ; Not currently necessary/used
 (defn login-field
@@ -45,12 +55,13 @@
      #_(let [csrf-token (force
                           ring.middleware.anti-forgery/*anti-forgery-token*)]
          [:div#sente-csrf-token {:data-csrf-token csrf-token}])
-     [:h1 "Welcome to Terraforming Catan!"]
+     [:h1 "Welcome to Shifting Worlds!"]
      ; [login-field]
      [:div {:style {:display "flex"}}
       [:button.btn.btn-outline-primary {:on-click #(rf/dispatch [:game/setup])}
        "Reset Game"]
       [undo-button]
+      [redo-button]
       (into [:div {:style {:display "flex" 
                            :width "100%"
                            :justify-content "space-evenly"}}]

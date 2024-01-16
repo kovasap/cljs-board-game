@@ -41,8 +41,17 @@ developments costing more days to build than others.
 
 In order of priority.
 
-1. Maybe have clearing a development of all resources trigger something (get
-   points?)
+1. Finish affinity system that gives you more affinity the more developments you
+   have on specific land types.
+   E.g.
+   a mountain would give you earth and fire affinity.
+   Then make affinity relate to your score or ability to build other
+   developments.
+1. Make smaller development buttoms above the map that show the entire
+   development card when you hover over them.
+1. Add an incentive to build on or connect swaths of the same type of land.
+   Perhaps your affinity is based on the size of the swaths you have at least one
+   development in?
 1. Implement the teraformer.
 1. make developments more strictly tile specific.
 1. Have left over resources stick around to the next round, and have them be
