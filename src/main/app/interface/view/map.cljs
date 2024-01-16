@@ -16,13 +16,14 @@
            row-idx
            col-idx
            development-type
-           is-valid-selection
+           selection-validator-error
            production
            controller-idx]
     :as   tile}]
   (let [adjacent-tiles @(rf/subscribe [:adjacent-tiles tile])
         currently-selecting @(rf/subscribe
                                [:tile-selection/currently-selecting])
+        selectable     (nil? selection-validator-error)
         hovered        (get-in @tile-hover-state [row-idx col-idx])
         controller     (get-only @(rf/subscribe [:players])
                                  :idx
@@ -33,24 +34,21 @@
                       :position   "relative"}
       ; Run the placement animation.
       :class         (if development-type "activate" "")
-      :on-mouse-over #(doseq [{t-row-idx :row-idx t-col-idx :col-idx}
-                              (conj adjacent-tiles tile)]
-                        (swap! tile-hover-state
-                          (fn [state]
-                            (assoc-in state [t-row-idx t-col-idx] true))))
-      :on-mouse-out  #(doseq [{t-row-idx :row-idx t-col-idx :col-idx}
-                              (conj adjacent-tiles tile)]
-                        (swap! tile-hover-state
-                          (fn [state]
-                            (assoc-in state [t-row-idx t-col-idx] false))))
-      :on-click      #(cond currently-selecting (rf/dispatch
-                                                  [:tile-selection/end tile])
-                            development-type    (rf/dispatch [:development/use
-                                                              development-type
-                                                              tile])
-                            :else               (rf/dispatch
-                                                  [:message
-                                                   "Can't do anything here"]))}
+      :on-mouse-over #(swap! tile-hover-state
+                         (fn [state] (assoc-in state [row-idx col-idx] true)))
+      :on-mouse-out  #(swap! tile-hover-state
+                         (fn [state] (assoc-in state [row-idx col-idx] false)))
+      :on-click      #(cond 
+                        currently-selecting
+                        (if selectable
+                          (rf/dispatch [:tile-selection/end tile])
+                          (rf/dispatch [:message selection-validator-error]))
+                        development-type    (rf/dispatch [:development/use
+                                                          development-type
+                                                          tile])
+                        :else               (rf/dispatch
+                                              [:message
+                                               "Can't do anything here"]))}
      [:div.background
       {:style (merge (:style land)
                      {:width    "100%"
@@ -58,8 +56,8 @@
                       :position "absolute"
                       :z-index  -1
                       :opacity  (if currently-selecting
-                                  (cond (and is-valid-selection hovered) 1.0
-                                        is-valid-selection 0.8
+                                  (cond (and selectable hovered) 1.0
+                                        selectable 0.8
                                         :else 0.4)
                                   0.8)})}]
      ; Note that the "clip-path" property that makes the hexagon shapes applies
@@ -71,6 +69,9 @@
        row-idx
        ", "
        col-idx]
+      [:div {:style {:display (if development-type "block" "none")}
+             :on-click #(rf/dispatch [:development/destroy tile])}
+       "DESTROY"]
       [:div {:style {:color (:color controller)}}
        (if controller (str (:player-name controller) "'s") nil)]
       [:div development-type]

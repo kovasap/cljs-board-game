@@ -37,7 +37,7 @@
 (defn select-developments
   []
   (conj (take num-available-developments (shuffle developments))
-        (get-only developments :type :settlement)))
+        (get-only developments :type :gathering)))
 
 (rf/reg-event-db
   :game/setup

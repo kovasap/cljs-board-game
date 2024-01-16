@@ -6,8 +6,8 @@
 
 
 ; Tile selection works by first calling :tile-selection/begin, which takes:
-; 1. a validator function that takes a tile and returns true if that tile can
-;    be selected, false otherwise.
+; 1. a validator function that takes a tile and returns nil if that tile can
+;    be selected, a string error message otherwise.
 ; 2. a callback function that takes the app db and the selected tile and
 ;    returns a new db.  This function is called when a tile is selected
 ;    (signalled via :tile-selection/end).
@@ -25,7 +25,7 @@
         (assoc :tile-selection/selection-data selection-data)
         (assoc :board (update-tiles (:board db)
                                     (fn [tile]
-                                      (assoc tile :is-valid-selection
+                                      (assoc tile :selection-validator-error
                                                   (validator tile))))))))
  
 (rf/reg-event-db

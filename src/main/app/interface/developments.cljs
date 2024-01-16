@@ -37,7 +37,8 @@
 (def developments
   (for
     [dev
-     [{:type        :settlement
+     [{:type        :gathering
+       :personnel   {:explorers -1}
        :letter      "S"
        :description "Accumulates resources for future collection/processing."
        :land-production {:forest   {:wood 2}
@@ -48,11 +49,13 @@
        :max         12}
       ; ----------------- Resource Generators -------------------
       {:type        :mill
+       :personnel   {:explorers -1}
        :letter      "M"
        :description "Produces planks from wood AND/OR flour from grain."
        :production-chains [{:wood -1 :planks 1} {:grain -1 :flour 1}]
        :max         6}
       {:type        :oven
+       :personnel   {:explorers -1}
        :letter      "O"
        :description "Produces charcoal from wood AND/OR bread from flour"
        :production-chains [{:wood -1 :charcoal 1} {:flour -1 :bread 4}]
@@ -60,31 +63,37 @@
        :max         6}
       ; ----------------- Point Generators --------------------
       {:type        :monument
+       :personnel   {:explorers -1}
        :letter      "T"
        :description "Worth 5 pts"
        :production-chains [{:stone -6 :points 5}]
        :max         2}
       {:type        :nature-preserve
+       :personnel   {:explorers -1}
        :letter      "N"
        :description "Worth 5 pts"
        :production-chains [{:water -2 :points 5}]
        :max         2}
       {:type        :carpenter
+       :personnel   {:explorers -1}
        :letter      "C"
        :description "Transforms planks into points"
        :production-chains [{:planks -1 :points 3}]
        :max         2}
       {:type        :crossroads
+       :personnel   {:explorers -1}
        :letter      "X"
        :description "Worth 1 points for each adjacent development."
        :not-implemented true
        :max         2}
       {:type        :oasis
+       :personnel   {:explorers -1}
        :letter      "A"
        :description "Makes water and points"
        :production-chains [{:water 1 :points 1}]
        :max         2}
       {:type :throne
+       :personnel   {:explorers -1}
        :letter "E"
        :description
        "Worth 10 pts if you have the most tiles of at least 3 land types"
@@ -92,6 +101,7 @@
        :max 2}
       ; TODO make this an infinite sink?
       {:type        :port
+       :personnel   {:explorers -1}
        :letter      "P"
        :description "Resources to points"
        :production-chains (into []
@@ -100,28 +110,33 @@
        :valid-lands #{:water}
        :max         2}
       {:type        :house
+       :personnel   {:explorers -1}
        :letter      "H"
        :description "Bread to points"
        :production-chains [{:bread -1 :points 2}]
        :max         6}
       ; ----------------- Point Eaters ---------------------------------------
       {:type        :bandit-hideout
+       :personnel   {:explorers -1}
        :letter      "H"
        :description "Turns points into bread"
        :production-chains [{:points -2 :bread 1}]
        :max         6}
       ; ----------------- Misc ---------------------------------------
       {:type        :road
+       :personnel   {:explorers -1}
        :letter      "R"
        :description "Does nothing, but extends your buildable area"
        :production-chains [{:wood -1} {:stone -1}]
        :max         12}
       {:type        :marketplace
+       :personnel   {:explorers -1}
        :letter      "K"
        :description "Moves all resources from adjacent tiles to itself."
        :not-implemented true
        :max         4}
       {:type :trading-post
+       :personnel   {:explorers -1}
        :description
        "Trade resources 2 to 1 according to what trades are available
                             from a rotating trading wheel of options (not yet implemented)."
@@ -129,11 +144,13 @@
        :valid-lands #{:plains}
        :max 6}
       {:type        :library
+       :personnel   {:explorers -1}
        :description "Can use opponent development without paying them a VP"
        :valid-lands #{:mountain}
        :not-implemented true
        :max         2}
       {:type        :terraformer
+       :personnel   {:explorers -1}
        :description "Change the land type of any tile"
        :not-implemented true
        :max         3}]]

@@ -6,21 +6,21 @@
 (defn get-opponent-adjacency-points
   [{:keys [board]} player-idx]
   (reduce +
-    (flatten
-      (for [tile (flatten board)
-            :when (= player-idx (:controller-idx tile))]
-        (for [{:keys [controller-idx]} (get-adjacent-tiles board tile)
-              :when (and (not (nil? controller-idx))
-                         (not (= controller-idx player-idx)))]
-          2)))))
-
+    (->> (flatten board)
+         (filter #(= (:controller-idx %) player-idx))
+         (map (fn [tile]
+                (reduce +
+                  (->> (get-adjacent-tiles board tile)
+                       (filter #(and (not (nil? (:controller-idx %)))
+                                     (not (= (:controller-idx %) player-idx))))
+                       (map (constantly 2)))))))))
+             
 (defn get-produced-points
   [{:keys [board]} player-idx]
   (reduce +
-    (for [{:keys [production controller-idx]} (flatten board)]
-      (if (= controller-idx player-idx)
-        (get production :points 0)
-        0))))
+    (->> (flatten board)
+         (filter #(= (:controller-idx %) player-idx))
+         (map #(get (:production %) :points 0)))))
 
 (defn get-largest-area-points
   [{:keys [board]} player-idx]

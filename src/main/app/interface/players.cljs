@@ -3,10 +3,12 @@
 
 (defn player-data
   [i player-name]
-  {:player-name     player-name
-   :idx             i
-   :color           (get ["blue" "red" "purple" "black"] i)
-   :points          0})
+  {:player-name player-name
+   :idx         i
+   :color       (get ["blue" "red" "purple" "black"] i)
+   :personnel {:explorers   5
+               :channelers  2}
+   :points      0})
 
 #_(defn update-resources
     [db player-idx resource-delta]

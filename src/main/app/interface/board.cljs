@@ -8,11 +8,6 @@
   (into []
         (for [column board] (into [] (for [tile column] (update-fn tile))))))
 
-(rf/reg-sub
-  :board
-  (fn [db _]
-    (:board db)))
-
 (defn one-away?
   [n1 n2]
   (or (= n1 (dec n2))
@@ -73,5 +68,3 @@
   :num-developments
   (fn [db [_ development-type]]
     (get-num-developments (:board db) development-type)))
-
-

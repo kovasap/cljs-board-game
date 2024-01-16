@@ -12,8 +12,22 @@
             [app.interface.utils :refer [get-only]]))
 
 
+(defn update-personnel
+  "Creates a new personnel map with personnel gained/lost by creating the given
+  development."
+  [development current-player-personnel]
+  (merge-with + current-player-personnel (:personnel development)))
+
+(defn insufficient-personnel?
+  "Returns false if the player has enough personnel to create the development,
+  true otherwise."
+  [development current-player]
+  (some neg?
+        (vals (update-personnel development (:personnel current-player)))))
+
+
 (defn make-development-placement-validator
-  "Creates a validator function to feed to :tile-selection/begin."
+  "Creates a tile validator function to feed to :tile-selection/begin."
   [development board current-player]
   (let [valid-lands         (get development
                                  :valid-lands
@@ -24,6 +38,8 @@
                   (for [chain (:production-chains development)]
                     [chain (unmet-resources chain board tile)]))]
         (cond
+          (insufficient-personnel? development current-player)
+          "Not enough explorers or channelers!"
           (not (nil? (:development-type tile)))
           "Tile is already occupied!"
           (and (seq chains-to-unmet-resources)
@@ -41,7 +57,8 @@
           (>= (get-num-developments board (:type development))
               (:max development))
           "Max number already placed!"
-          :else true)))))
+          :else
+          nil)))))
 
 
 (defn make-development-placement-callback
@@ -61,5 +78,16 @@
                 (apply comp
                   (for [chain (:production-chains development)]
                     #(apply-production-chain chain % tile))))
+        ; Update player personnel counts
+        (update-in [:players current-player-idx :personnel]
+                   #(update-personnel development %))
         ; Do any special, development specific on placement actions.
         ((:on-placement development)))))
+
+(rf/reg-event-db
+  :development/destroy
+  (fn [db [_ tile]]
+    (-> db
+        TODO implement)))
+        
+  
