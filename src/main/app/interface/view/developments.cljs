@@ -2,59 +2,41 @@
   (:require [re-frame.core :as rf]
             [reagent.core :as r]
             [clojure.string :as st]
-            [app.interface.utils :refer [get-only]]
             [app.interface.view.util :refer [tally-marks]]
-            [app.interface.developments :refer [developments resources]]
+            [app.interface.view.unique-id :refer [get-unique-id]]
+            [app.interface.view.personnel :refer [personnel-view]]
+            [app.interface.developments :refer [resources]]
             [app.interface.development-placement
              :refer
-             [make-development-placement-validator
-              make-development-placement-callback]]
+             [make-toggle-development-placement-fn]]
             ["cytoscape" :as cytoscape]))
 
 
-(def dev-desc-hover-state (r/atom {}))
-(defn development-desc-view
-  [development-type {:keys [row-idx col-idx] :as tile}]
-  (let [unique-key  [row-idx col-idx]
-        development (get-only developments :type development-type)]
-    [:div {:style         {:width    "100%"
-                           :height   "100%"
-                           :position "absolute"
-                           :z-index  1}
-           :on-mouse-over #(swap! dev-desc-hover-state
-                             (fn [state] (assoc state unique-key true)))
-           :on-mouse-out  #(swap! dev-desc-hover-state
-                             (fn [state] (assoc state unique-key false)))}
-     [:div
-      {:style    {:position   "absolute"
-                  :background "white"
-                  :overflow   "visible"
-                  :text-align "left"
-                  :top        50
-                  :z-index    2
-                  :display    (if (get @dev-desc-hover-state unique-key)
-                                "block"
-                                "none")}
-       :on-click #(rf/dispatch [:development/destroy tile])}
-      [:p (:description development)]
-      [:p "Click to destroy."]]]))
-      
+(def dev-build-hover-state (r/atom {}))
+(defn development-build-button-view
+  [development]
+  [:button {:style         {:width    "50px"
+                            :height   "30px"}
+            :on-mouse-over #(swap! dev-build-hover-state
+                              (fn [state] (assoc state (:type development) true)))
+            :on-mouse-out  #(swap! dev-build-hover-state
+                              (fn [state] (assoc state (:type development) false)))
+            :on-click (make-toggle-development-placement-fn development)}
+   [:div
+    [:strong (name (:type development))] " "
+    [personnel-view (:personnel development)]]])
 
 
-(def unique-id (atom 1))
 (defn development-blueprint-view
   [development]
-  (let [dev-name       (name (:type development))
-        existing-num   @(rf/subscribe [:num-developments (:type development)])
-        current-player @(rf/subscribe [:current-player])
-        board          @(rf/subscribe [:board])
-        placing-this-development
+  (let [dev-name     (name (:type development))
+        existing-num @(rf/subscribe [:num-developments (:type development)])
+        unique-id    (str dev-name "-blueprint")
+        currently-placing-this-development
         (= (:development-type @(rf/subscribe [:tile-selection/selection-data]))
            (:type development))]
-    (swap! unique-id inc)
     [:div
-     {:key      (str dev-name @unique-id) ; Required by react (otherwise
-                                          ; we get a warning).
+     {:key      unique-id
       :style    {:background  (if (:not-implemented development)
                                 "LightGrey"
                                 "LightBlue")
@@ -63,29 +45,14 @@
                  :height      "300px"
                  :flex        1
                  :padding     "15px"
-                 :font-weight (if placing-this-development "bold" "normal")
+                 :font-weight (if currently-placing-this-development
+                                "bold"
+                                "normal")
                  :border      "2px solid black"}
-      :on-click (if (:not-implemented development)
-                  #(prn "not implemented")
-                  #(if placing-this-development
-                     (rf/dispatch [:tile-selection/end nil])
-                     (rf/dispatch [:tile-selection/start
-                                   (make-development-placement-validator
-                                     development
-                                     board
-                                     (:idx current-player))
-                                   (make-development-placement-callback
-                                     development
-                                     (:idx current-player))
-                                   {:development-type (:type development)}])))}
-     (into
-       [:div [:strong dev-name] " " existing-num "/" (:max development) " "]
-       (for [[ptype number] (:personnel development)]
-         [:span {:style {:color (if (neg? number) "red" "green")}}
-          (tally-marks (abs number)
-                       (case ptype
-                         :explorers  "i"
-                         :channelers "j"))]))
+      :on-click (make-toggle-development-placement-fn development)}
+     [:div
+      [:strong dev-name] " " existing-num "/" (:max development) " "
+      [personnel-view (:personnel development)]]
      [:div
       [:small
        "Place in "
@@ -95,14 +62,14 @@
        [:div
         "Chains: "
         (for [chain (:production-chains development)]
-          [:div {:key (str chain @unique-id)}
+          [:div {:key (str chain unique-id)}
            (str chain)])]
        nil)
      (if (:land-production development)
        [:div
         "Harvests: "
         (for [[land production] (:land-production development)]
-          [:div {:key (str land @unique-id)}
+          [:div {:key (str land unique-id)}
            (str land " : " production)])]
        nil)]))
 
@@ -185,7 +152,7 @@
               :container (js/document.getElementById graph-element-id)
               :elements  (make-development-graph @developments-atom)})))})))
        
-(defn blueprints
+(defn blueprints-view
   []
   ; TODO calculate this height based on the board height instead of hardcoding
   (let [developments (rf/subscribe [:blueprints])]

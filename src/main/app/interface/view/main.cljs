@@ -7,7 +7,9 @@
             [app.interface.view.map :refer [board-view]]
             [app.interface.view.players :refer [player-card-view]]
             [app.interface.developments :refer [developments]]
-            [app.interface.view.developments :refer [blueprints]]
+            [app.interface.view.developments
+             :refer
+             [blueprints-view development-blueprint-view]]
             [cljs.pprint]))
 
 (defn undo-button
@@ -44,44 +46,79 @@
                    (login user-id)))}
     "Secure login!"]])
 
+(rf/reg-event-db
+  :register-mouse-position
+  (fn [db [_ event]]
+    (assoc db :mouse-position {:x (.-clientX event) :y (.-clientY event)})))
+
+(rf/reg-sub
+  :mouse-position
+  (fn [db _]
+    (:mouse-position db)))
+
+(rf/reg-event-db
+  :mouse-following-window
+  (fn [db [_ window-hiccup]]
+    (assoc db :mouse-following-window window-hiccup)))
+
+(rf/dispatch [:mouse-following-window [:div "HI"]])
+
+(rf/reg-sub
+  :mouse-following-window
+  (fn [db _]
+    (:mouse-following-window db)))
 
 (defn main
   "Main view for the application."
   []
   (let [players @(rf/subscribe [:players])
-        db      @(rf/subscribe [:db])]
-    [:div @chsk-state]
-    [:div.container
-     #_(let [csrf-token (force
-                          ring.middleware.anti-forgery/*anti-forgery-token*)]
-         [:div#sente-csrf-token {:data-csrf-token csrf-token}])
-     [:h1 "Welcome to Shifting Worlds!"]
-     ; [login-field]
-     [:div {:style {:display "flex"}}
-      [:button.btn.btn-outline-primary {:on-click #(rf/dispatch [:game/setup])}
-       "Reset Game"]
-      [undo-button]
-      [redo-button]
-      (into [:div {:style {:display "flex" 
-                           :width "100%"
-                           :justify-content "space-evenly"}}]
-            (for [player players] (player-card-view player)))
-      [:button.btn.btn-outline-primary {:on-click #(rf/dispatch [:end-turn])
-                                        :style {:margin-left "auto"}}
-       [:b "End Turn "] "and Send to Server"]]
-     [:br]
-     [:div 
-      [:p "Orders: " (:orders db)]
-      [:p "Points given to first achiever"]]
-     [:div {:style {:display  "grid"
-                    :grid-template-columns "auto auto"
-                    :grid-gap "15px"}}
+        db      @(rf/subscribe [:db])
+        mouse-following-window @(rf/subscribe [:mouse-following-window])
+        mouse-position @(rf/subscribe [:mouse-position])]
+    [:div
+     ; This feedback loop is pretty laggy...
+     ; To fix it I may want to try making my own reagent atom instead of going
+     ; through re-frame:
+     ; https://stackoverflow.com/questions/57654246/tracking-mouse-and-render-dot-at-the-screen-in-clojurescript-reagent
+     {:on-mouse-move (fn [event]
+                       (rf/dispatch [:register-mouse-position event]))}
+     [:div.mouse-following-window {:style {:left (:x mouse-position)
+                                           :top (:y mouse-position)
+                                           :position "absolute"}}
+      mouse-following-window]
+     [:div @chsk-state]
+     [:div.container
+      #_(let [csrf-token (force
+                           ring.middleware.anti-forgery/*anti-forgery-token*)]
+          [:div#sente-csrf-token {:data-csrf-token csrf-token}])
+      [:h1 "Welcome to Shifting Worlds!"]
+      ; [login-field]
+      [:div {:style {:display "flex"}}
+       [:button.btn.btn-outline-primary {:on-click #(rf/dispatch
+                                                      [:game/setup])}
+        "Reset Game"]
+       [undo-button]
+       [redo-button]
+       (into [:div {:style {:display         "flex"
+                            :width           "100%"
+                            :justify-content "space-evenly"}}]
+             (for [player players]
+               (player-card-view player)))
+       [:button.btn.btn-outline-primary {:on-click #(rf/dispatch [:end-turn])
+                                         :style    {:margin-left "auto"}}
+        [:b "End Turn "]
+        "and Send to Server"]]
+      [:br]
+      [:div [:p "Orders: " (:orders db)] [:p "Points given to first achiever"]]
+      [:div {:style {:display  "grid"
+                     :grid-template-columns "auto auto"
+                     :grid-gap "15px"}}
+       [:div
+        [board-view]
+        [:br]
+        [:div @(rf/subscribe [:message])]
+        [:br]]
+       [blueprints-view]]
       [:div
-       (board-view)
-       [:br]
-       [:div @(rf/subscribe [:message])]
-       [:br]]
-      (blueprints)]
-     [:div
-      "TODO add diff of game state to show what just happened\n"
-      [:pre (with-out-str (cljs.pprint/pprint db))]]]))
+       "TODO add diff of game state to show what just happened\n"
+       [:pre (with-out-str (cljs.pprint/pprint db))]]]]))

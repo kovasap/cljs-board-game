@@ -1,18 +1,17 @@
 (ns app.interface.view.players
   (:require [re-frame.core :as rf]
-            [app.interface.view.util :refer [tally-marks]]))
+            [app.interface.view.personnel :refer [personnel-view]]))
 
 
 (defn player-card-view
   [{:keys [player-name idx color]}]
   (let [current-player-name (:player-name @(rf/subscribe [:current-player]))
-        {:keys [explorers channelers]} @(rf/subscribe [:personnel idx])
+        personnel @(rf/subscribe [:personnel idx])
         points @(rf/subscribe [:score-for-player idx])]
     [:div
      [:div {:style {:color color}}
       player-name
       (if (= player-name current-player-name) "*" "")]
-     [:div "Explorers: " (tally-marks explorers "i")]
-     [:div "Channelers: " (tally-marks channelers "j")]
+     [:div "Personnel: " [personnel-view personnel]]
      (for [[k v] points]
        [:div {:key (str player-name (name k))} v " pts for " (name k)])]))

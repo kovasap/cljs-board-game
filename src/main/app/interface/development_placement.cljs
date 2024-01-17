@@ -80,6 +80,28 @@
         ; Do any special, development specific on placement actions.
         ((:on-placement development)))))
 
+(defn make-toggle-development-placement-fn
+  [development]
+  (let [current-player-idx (:idx @(rf/subscribe [:current-player]))
+        board          @(rf/subscribe [:board])
+        currently-placing-this-development
+        (= (:development-type @(rf/subscribe [:tile-selection/selection-data]))
+           (:type development))]
+    (if (:not-implemented development)
+     #(rf/dispatch
+        [:message
+         (str "Development " (name (:type development)) " not implemented")])
+     #(if currently-placing-this-development
+        (rf/dispatch [:tile-selection/end nil])
+        (rf/dispatch
+          [:tile-selection/start
+           (make-development-placement-validator development
+                                                 board
+                                                 current-player-idx)
+           (make-development-placement-callback development current-player-idx)
+           {:development-type (:type development)}])))))
+    
+
 (rf/reg-event-db
   :development/destroy
   (undoable "Development destruction")

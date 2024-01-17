@@ -36,7 +36,9 @@
 
 (defn select-developments
   []
-  (conj (take num-available-developments (shuffle developments))
+  (conj (take num-available-developments
+              (filter #(not (= (:type %) :gathering)) (shuffle developments)))
+        ; Make sure gatherings are included.
         (get-only developments :type :gathering)))
 
 (rf/reg-event-db

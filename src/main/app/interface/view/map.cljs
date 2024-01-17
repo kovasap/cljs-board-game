@@ -4,7 +4,35 @@
             [clojure.string :as st]
             [app.interface.config :refer [debug]]
             [app.interface.utils :refer [get-only]]
-            [app.interface.view.developments :refer [development-desc-view]]))
+            [app.interface.developments :refer [developments]]))
+
+
+(def dev-desc-hover-state (r/atom {}))
+(defn development-desc-view
+  [development-type {:keys [row-idx col-idx] :as tile}]
+  (let [unique-key  [row-idx col-idx]
+        development (get-only developments :type development-type)]
+    [:div {:style         {:width    "100%"
+                           :height   "100%"
+                           :position "absolute"
+                           :z-index  1}
+           :on-mouse-over #(swap! dev-desc-hover-state
+                             (fn [state] (assoc state unique-key true)))
+           :on-mouse-out  #(swap! dev-desc-hover-state
+                             (fn [state] (assoc state unique-key false)))}
+     [:div
+      {:style    {:position   "absolute"
+                  :background "white"
+                  :overflow   "visible"
+                  :text-align "left"
+                  :top        50
+                  :z-index    2
+                  :display    (if (get @dev-desc-hover-state unique-key)
+                                "block"
+                                "none")}
+       :on-click #(rf/dispatch [:development/destroy tile])}
+      [:p (:description development)]
+      [:p "Click to destroy."]]]))
 
 
 ; See resources/public/css/board.css for supporting css.
