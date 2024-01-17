@@ -9,7 +9,7 @@
             [app.interface.developments :refer [developments]]
             [app.interface.view.developments
              :refer
-             [blueprints-view development-blueprint-view]]
+             [blueprints-view build-buttons-view]]
             [cljs.pprint]))
 
 (defn undo-button
@@ -47,45 +47,28 @@
     "Secure login!"]])
 
 (rf/reg-event-db
-  :register-mouse-position
-  (fn [db [_ event]]
-    (assoc db :mouse-position {:x (.-clientX event) :y (.-clientY event)})))
+  :popup-window-at-coords
+  (fn [db [_ window {:keys [x y]}]]
+    (if (nil? window)
+      (dissoc db :popup-window-at-coords)
+      (assoc db :popup-window-at-coords
+                [:div.popup-window-at-coords
+                  {:style {:left x :top y :z-index 100 :position "absolute"}}
+                  window]))))
 
 (rf/reg-sub
-  :mouse-position
+  :popup-window-at-coords
   (fn [db _]
-    (:mouse-position db)))
-
-(rf/reg-event-db
-  :mouse-following-window
-  (fn [db [_ window-hiccup]]
-    (assoc db :mouse-following-window window-hiccup)))
-
-(rf/dispatch [:mouse-following-window [:div "HI"]])
-
-(rf/reg-sub
-  :mouse-following-window
-  (fn [db _]
-    (:mouse-following-window db)))
+    (:popup-window-at-coords db)))
 
 (defn main
   "Main view for the application."
   []
   (let [players @(rf/subscribe [:players])
         db      @(rf/subscribe [:db])
-        mouse-following-window @(rf/subscribe [:mouse-following-window])
-        mouse-position @(rf/subscribe [:mouse-position])]
+        popup-window-at-coords @(rf/subscribe [:popup-window-at-coords])]
     [:div
-     ; This feedback loop is pretty laggy...
-     ; To fix it I may want to try making my own reagent atom instead of going
-     ; through re-frame:
-     ; https://stackoverflow.com/questions/57654246/tracking-mouse-and-render-dot-at-the-screen-in-clojurescript-reagent
-     {:on-mouse-move (fn [event]
-                       (rf/dispatch [:register-mouse-position event]))}
-     [:div.mouse-following-window {:style {:left (:x mouse-position)
-                                           :top (:y mouse-position)
-                                           :position "absolute"}}
-      mouse-following-window]
+     popup-window-at-coords
      [:div @chsk-state]
      [:div.container
       #_(let [csrf-token (force
@@ -110,6 +93,7 @@
         "and Send to Server"]]
       [:br]
       [:div [:p "Orders: " (:orders db)] [:p "Points given to first achiever"]]
+      [build-buttons-view]
       [:div {:style {:display  "grid"
                      :grid-template-columns "auto auto"
                      :grid-gap "15px"}}

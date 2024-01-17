@@ -22,16 +22,17 @@
                              (fn [state] (assoc state unique-key false)))}
      [:div
       {:style    {:position   "absolute"
-                  :background "white"
+                  :background "red"
                   :overflow   "visible"
-                  :text-align "left"
-                  :top        50
+                  :width "100%"
+                  :opacity 0.6
+                  :text-align "center"
+                  :top        110
                   :z-index    2
                   :display    (if (get @dev-desc-hover-state unique-key)
                                 "block"
                                 "none")}
        :on-click #(rf/dispatch [:development/destroy tile])}
-      [:p (:description development)]
       [:p "Click to destroy."]]]))
 
 
@@ -58,7 +59,9 @@
                       :text-align "center"
                       :position   "relative"}
       ; Run the placement animation.
-      :class         (if development-type "activate" "")
+      ; TODO uncomment when I figure out how to make this not happen whenever
+      ; the tile is changed at all.
+      ; :class         (if development-type "activate" "")
       :on-mouse-over #(swap! tile-hover-state
                         (fn [state] (assoc-in state [row-idx col-idx] true)))
       :on-mouse-out  #(swap! tile-hover-state

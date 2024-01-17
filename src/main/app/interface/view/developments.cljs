@@ -12,21 +12,6 @@
             ["cytoscape" :as cytoscape]))
 
 
-(def dev-build-hover-state (r/atom {}))
-(defn development-build-button-view
-  [development]
-  [:button {:style         {:width    "50px"
-                            :height   "30px"}
-            :on-mouse-over #(swap! dev-build-hover-state
-                              (fn [state] (assoc state (:type development) true)))
-            :on-mouse-out  #(swap! dev-build-hover-state
-                              (fn [state] (assoc state (:type development) false)))
-            :on-click (make-toggle-development-placement-fn development)}
-   [:div
-    [:strong (name (:type development))] " "
-    [personnel-view (:personnel development)]]])
-
-
 (defn development-blueprint-view
   [development]
   (let [dev-name     (name (:type development))
@@ -180,4 +165,40 @@
            (for [development (sort-by (fn [{:keys [not-implemented type]}]
                                         [not-implemented type])
                                       @developments)]
-             (development-blueprint-view development)))]))
+             [development-blueprint-view development]))]))
+
+
+(defn development-build-button-view
+  [development]
+  [:button {:style         {:width "200px" :height "30px"}
+            :on-mouse-over #(rf/dispatch [:popup-window-at-coords
+                                          (development-blueprint-view
+                                            development)
+                                          {:x (.-clientX %)
+                                           :y (.-clientY %)}])
+            :on-mouse-out  #(rf/dispatch [:popup-window-at-coords nil nil])
+            :on-click      (make-toggle-development-placement-fn development)}
+   [:div
+    [:strong (name (:type development))]
+    " "
+    [personnel-view (:personnel development)]]])
+
+
+; TODO organize these by type
+(defn build-buttons-view
+  []
+  (let [developments @(rf/subscribe [:blueprints])
+        groups       (group-by :category developments)]
+    (into
+      [:div {:style {:display  "grid"
+                     :grid-template-columns (st/join " "
+                                                     (map (constantly "auto")
+                                                       groups))
+                     :grid-gap "5px"}}
+       (for [[group sub-developments] groups]
+         (into [:div {:style {:display  "grid"
+                              :grid-template-columns "auto"
+                              :grid-gap "5px"}}
+                [:pre (name group)]]
+               (for [development sub-developments]
+                 [development-build-button-view development])))])))
