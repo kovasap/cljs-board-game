@@ -4,7 +4,9 @@
 (def orders
   [{:title "Landlord"
     :points 2
-    :description "Own at least 10 tiles."}
+    :description "Own at least 10 tiles."
+    :achieved? (fn [db player-idx]
+                 )}
    {:title "Explorer"
     :points 2
     :description "Have a development on 4 different tile types."}

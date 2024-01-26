@@ -41,6 +41,8 @@ developments costing more days to build than others.
 
 In order of priority.
 
+1. Make it so that completing certain production chains allows you to build on
+   some other tile types.
 1. Finish affinity system that gives you more affinity the more developments you
    have on specific land types.
    E.g.
@@ -74,6 +76,7 @@ In order of priority.
    for people to steal your resources.
 1. A tile selection system to use for all selection, use this for the
    terraformer tile selection.
+1. https://github.com/timothypratley/reanimated?tab=readme-ov-file
 1. Add better logging: https://github.com/ptaoussanis/sente/issues/416
 1. Possibly host on glitch.com
 

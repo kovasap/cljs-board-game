@@ -29,6 +29,9 @@
 (def resources
   (concat basic-resources refined-resources special-resources))
 
+(def category-preferred-ordering
+  [:basic :refinement :personnel :point-generation :point-consumption :misc])
+
 ; TODO add:
 ;  - railroad or crossroads that can connect production chain tiles
 ; These are references to development that are not to be copied, just
@@ -39,6 +42,7 @@
     [dev
      [{:type        :gathering
        :personnel   {:explorers -1}
+       :affinity-requirement {:earth 0 :air 0 :water 0 :fire 0}
        :category    :basic
        :letter      "S"
        :description "Accumulates resources for future collection/processing."
@@ -48,6 +52,13 @@
                          :desert   {:fossils 1}
                          :water    {:water 2}}
        :max         12}
+      {:type        :oasis
+       :personnel   {:explorers -1}
+       :category    :basic
+       :letter      "A"
+       :description "Makes water and points"
+       :production-chains [{:water 1 :points 1}]
+       :max         2}
       ; ----------------- Resource Generators -------------------
       {:type        :mill
        :personnel   {:explorers -1}
@@ -93,13 +104,6 @@
        :description "Worth 1 points for each adjacent development."
        :not-implemented true
        :max         2}
-      {:type        :oasis
-       :personnel   {:explorers -1}
-       :category    :point-generation
-       :letter      "A"
-       :description "Makes water and points"
-       :production-chains [{:water 1 :points 1}]
-       :max         2}
       {:type :throne
        :personnel   {:channelers -1}
        :category    :point-generation
@@ -122,14 +126,14 @@
       ; ----------------- Personnel ---------------------------------------
       {:type        :house
        :personnel   {:explorers 1}
-       :category    :personel
+       :category    :personnel
        :letter      "H"
        :description "Bread to explorers"
        :production-chains [{:bread -1}]
        :max         6}
       {:type        :temple
        :personnel   {:channelers 1}
-       :category    :personel
+       :category    :personnel
        :letter      "T"
        :description "Water to channelers"
        :production-chains [{:water -1}]

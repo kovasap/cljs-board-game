@@ -1,5 +1,11 @@
 (ns app.interface.lands)
 
+; TODO maybe do something with these
+(def temperature-scale
+  [:frozen :cold :moderate :hot :scorching])
+(def order-scale
+  [:chaotic :disordered :aligned :crystallized])
+
 ; In order of cycle shifting.
 (def lands
   [{:letter     "F"

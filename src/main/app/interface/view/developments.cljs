@@ -2,10 +2,11 @@
   (:require [re-frame.core :as rf]
             [reagent.core :as r]
             [clojure.string :as st]
+            [clojure.set :refer [difference]]
             [app.interface.view.util :refer [tally-marks]]
             [app.interface.view.unique-id :refer [get-unique-id]]
             [app.interface.view.personnel :refer [personnel-view]]
-            [app.interface.developments :refer [resources]]
+            [app.interface.developments :refer [resources category-preferred-ordering]]
             [app.interface.development-placement
              :refer
              [make-toggle-development-placement-fn]]
@@ -187,18 +188,21 @@
 ; TODO organize these by type
 (defn build-buttons-view
   []
-  (let [developments @(rf/subscribe [:blueprints])
-        groups       (group-by :category developments)]
+  (let [developments        @(rf/subscribe [:blueprints])
+        devs-by-categories  (group-by :category developments)
+        leftover-categories (difference (set (keys devs-by-categories))
+                                        (set category-preferred-ordering))]
     (into
       [:div {:style {:display  "grid"
                      :grid-template-columns (st/join " "
                                                      (map (constantly "auto")
-                                                       groups))
+                                                       devs-by-categories))
                      :grid-gap "5px"}}
-       (for [[group sub-developments] groups]
+       (for [category (concat category-preferred-ordering
+                              (vec leftover-categories))]
          (into [:div {:style {:display  "grid"
                               :grid-template-columns "auto"
                               :grid-gap "5px"}}
-                [:pre (name group)]]
-               (for [development sub-developments]
+                [:pre (name category)]]
+               (for [development (category devs-by-categories)]
                  [development-build-button-view development])))])))
