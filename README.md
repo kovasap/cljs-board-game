@@ -1,5 +1,8 @@
 # Shifting World
 
+Live version can be found at http://kovas.duckdns.org:3000/.  Note that this
+is running on a raspeberry pi in my house so it may not be consistently up :).
+
 ## Game Flow
 
 Every round, players place developments in order until they cannot place any
