@@ -44,6 +44,7 @@ developments costing more days to build than others.
 
 In order of priority.
 
+1. Think about a "market" to act as a final scoring tile system like terra mystica.  Each round has a different "demand" for different resources - more can be accepted for more points.
 1. Make it so that completing certain production chains allows you to build on
    some other tile types.
 1. Finish affinity system that gives you more affinity the more developments you
